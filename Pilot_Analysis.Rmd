@@ -1,0 +1,33 @@
+---
+title: "Pilot_Analysis"
+author: "Phillip Johnston"
+date: "November 7, 2018"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(data.table)
+
+df = read_csv("sub000.csv") %>% data.table()
+```
+
+```{r plot proportions}
+ggplot(df, aes(x=factor(SOA), fill = factor(resp))) + 
+  geom_bar(position = "fill") + 
+  labs(x = "SOA", y = "Proportion", fill = "Judgment")
+```
+
+```{r calculate frequencies}
+df %>% 
+  group_by(SOA, resp) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = n / sum(n)) %>% 
+  filter(resp == 'l') %>% 
+  
+  ggplot(aes(x = factor(SOA), y = freq)) + 
+    geom_point() +
+    labs(x = "SOA", y = "Frequency")
+```
+
