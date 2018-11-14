@@ -140,7 +140,9 @@ for block in range(num_blocks):
         all_responses.append([subj, block + 1, trial_count, SOA, keys[0][0], keys[0][1]])
         win.flip()
         core.wait(0.75) #ITI
-        
+
+win.close()
+
 print(expClock.getTime())
 df = pd.DataFrame(all_responses)
 df.columns = ['subj', 'block', 'trial', 'SOA', 'resp', 'rt']
