@@ -10,7 +10,7 @@ from psychopy import visual, core, event, gui, logging, sound
 from random import shuffle
 import matplotlib.pyplot as plt
  
-#Note to self: match degrees of visual angle to other studies. Set priority (core.rush(True)). Generate logfile using method from Lec6 slides. Remove esc key for final run?
+#To do: match degrees of visual angle to other studies. Generate logfile? Remove esc key for final run?
 
 #system setup
 #core.rush(True) #gives psychopy priority
@@ -49,7 +49,7 @@ if actual_framerate < framerate - 0.1 or actual_framerate >  framerate + 0.1:
     sys.exit("Expected refresh rate: " + str(framerate) + ". Actual rate: " + str(actual_framerate))
 
 #create beep stimulus
-beep = sound.Sound('3500', secs=0.007, stereo=False)
+beep = sound.Sound('3500', secs=0.01, stereo=False)
 beep.setVolume(1)
 
 #create flash stimulus
@@ -94,7 +94,8 @@ for block in range(num_blocks):
         core.wait(np.random.uniform(1, 1.5))
         fixation.draw()
         win.flip()
-         
+        core.rush(True) #give psychopy priority during presentation
+        
         if SOA < 0: #auditory then visual
             
             #beep
@@ -148,6 +149,7 @@ for block in range(num_blocks):
             " Error: " + str(trialClock.getTime() - (SOA*frame_length)))
             beep.play()
             
+        core.rush(False)
         core.wait(0.75)
         
         #collect response
