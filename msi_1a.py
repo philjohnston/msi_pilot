@@ -10,7 +10,16 @@ from psychopy import visual, core, event, gui, logging, sound
 from random import shuffle
 import matplotlib.pyplot as plt
  
-#Note to self: match degrees of visual angle to other studies
+#Note to self: match degrees of visual angle to other studies. Set priority (core.rush(True)). Generate logfile using method from Lec6 slides. Remove esc key for final run?
+
+#system setup
+#core.rush(True) #gives psychopy priority
+framerate = 100 #For debugging purposes only. Must be 100 for data collection 
+
+if framerate != 100:
+    print("Warning: framerate not set to 100 Hz")
+
+frame_length = 1/framerate #length of frame in s (1/frame rate)
 
 #get Subject ID
 subgui = gui.Dlg() 
@@ -18,22 +27,29 @@ subgui.addField("Subject ID:")
 subgui.show()
 subj = subgui.data[0]
 
+
 #setup
 win = visual.Window(fullscr=True, allowGUI=False, color="black", screen=1, units='height', waitBlanking=True)
 trialClock = core.Clock()
 expClock = core.Clock()
 num_blocks = 5
-SOA_list= 4*[-40, -35, -30, -25, -20, -15, -10, -8, -5, -2, -1, 0, 1, 2, 5, 8, 10, 15, 20, 25, 30, 35, 40] # SOA in number of frames
+SOA_list= 4*[-40, -35, -30, -25, -20, -15, -10, -8, -5, -2, -1, 0, 1, 2, 5, 8, 10, 15, 20, 25, 30, 35, 40] # SOA (in number of frames)
 all_responses = []
-frame_length = 1/60 #length of frame in s (1/refresh rate)
+
 
 #check for existing subject file
 outputFileName = 'data' + os.sep + '1a_sub' + subj + '.csv' 
 if os.path.isfile(outputFileName) :
-    sys.exit("data for this subject already exists")
-    
+    sys.exit("Data for this subject already exists")
+
+#check refresh rate
+actual_framerate = win.getActualFrameRate(nIdentical=100, nMaxFrames=1000,
+    nWarmUpFrames=10, threshold=1)
+if actual_framerate < framerate - 0.1 or actual_framerate >  framerate + 0.1:
+    sys.exit("Expected refresh rate: " + str(framerate) + ". Actual rate: " + str(actual_framerate))
+
 #create beep stimulus
-beep = sound.Sound('2000', secs=0.01, stereo=False)
+beep = sound.Sound('3500', secs=0.007, stereo=False)
 beep.setVolume(1)
 
 #create flash stimulus
@@ -43,15 +59,27 @@ flash = visual.RadialStim(win, size = 0.3, radialCycles = 1, radialPhase = 1/2,
 #create fixation
 fixation = visual.TextStim(win, text = "+", color = "white", height = 0.075)
 
+#instructions
+instructions = visual.TextStim(win, text = """You will hear a beep and see a flash. When prompted, please use the 'A' and 'L' keys to report whether they occur simultaneously or not. Press any key to begin. 
+                                                        'A' = NO              'L' = YES""", height = 0.075, pos = (0, 0)) #response keys will be counterbalanced in final experiment
+start_prompt = visual.TextStim(win, text = "Press any key to begin", height = -0.075)
+instructions.draw()
+win.flip()
+event.waitKeys()
+
+block_count = 0
 #run
 for block in range(num_blocks):
     shuffle(SOA_list)
+    block_count += 1
     
-    #prompt any key
-    start_prompt = visual.TextStim(win, text = "Press any key to begin", height = 0.075)
-    start_prompt.draw()
-    win.flip()
-    event.waitKeys()
+    if block_count != 1:
+        
+        #prompt any key
+        start_prompt = visual.TextStim(win, text = "Press any key to begin", height = 0.075)
+        start_prompt.draw()
+        win.flip()
+        event.waitKeys()
     
     trial_count = 0
     
@@ -129,11 +157,17 @@ for block in range(num_blocks):
         key_prompt.draw()
         win.flip()
         trialClock.reset()
-        keys = event.waitKeys(timeStamped=trialClock, keyList = ['a', 'l', 'escape'], maxWait = 2)
+        keys = event.waitKeys(timeStamped=trialClock, keyList = ['a', 'l', 'escape', 'end'], maxWait = 2)
         
         if keys == None: # check for no response
             keys=[['NaN', 'NaN']]
-        elif keys[0][0] == 'escape': #change this so data is saved on force quit (or give second prompt)
+        elif keys[0][0] == 'escape': #data saves on quit
+            win.close()
+            df = pd.DataFrame(all_responses)
+            df.columns = ['subj', 'block', 'trial', 'SOA', 'resp', 'rt']
+            df.to_csv(outputFileName)
+            core.quit()
+        elif keys[0][0] == 'end': #data doesn't save (for debugging)
             win.close()
             core.quit()
             
