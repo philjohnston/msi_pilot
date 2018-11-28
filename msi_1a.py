@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 #To do: match degrees of visual angle to other studies. Generate logfile? Remove esc key for final run?
 
 #system setup
-#core.rush(True) #gives psychopy priority
 framerate = 100 #For debugging purposes only. Must be 100 for data collection 
 
 if framerate != 100:
@@ -33,7 +32,8 @@ win = visual.Window(fullscr=True, allowGUI=False, color="black", screen=1, units
 trialClock = core.Clock()
 expClock = core.Clock()
 num_blocks = 5
-SOA_list= 4*[-40, -35, -30, -25, -20, -15, -10, -8, -5, -2, -1, 0, 1, 2, 5, 8, 10, 15, 20, 25, 30, 35, 40] # SOA (in number of frames)
+SOA_list= 4*[-40, -35, -30, -2-
+-5, -20, -15, -10, -8, -5, -2, -1, 0, 1, 2, 5, 8, 10, 15, 20, 25, 30, 35, 40] # SOA (in number of frames)
 all_responses = []
 
 
@@ -60,8 +60,8 @@ flash = visual.RadialStim(win, size = 0.3, radialCycles = 1, radialPhase = 1/2,
 fixation = visual.TextStim(win, text = "+", color = "white", height = 0.075)
 
 #instructions
-instructions = visual.TextStim(win, text = """You will hear a beep and see a flash. When prompted, please use the 'A' and 'L' keys to report whether they occur simultaneously or not. Press any key to begin. 
-                                                        'A' = NO              'L' = YES""", height = 0.075, pos = (0, 0)) #response keys will be counterbalanced in final experiment
+instructions = visual.TextStim(win, text = """You will hear a beep and see a flash. When prompted, please use the left and right arrow keys to report whether they occur simultaneously or not. Press any key to begin. 
+                                                        ← = NO              → = YES""", height = 0.075, pos = (0, 0)) #response keys will be counterbalanced in final experiment
 start_prompt = visual.TextStim(win, text = "Press any key to begin", height = -0.075)
 instructions.draw()
 win.flip()
@@ -159,7 +159,7 @@ for block in range(num_blocks):
         key_prompt.draw()
         win.flip()
         trialClock.reset()
-        keys = event.waitKeys(timeStamped=trialClock, keyList = ['a', 'l', 'escape', 'end'], maxWait = 2)
+        keys = event.waitKeys(timeStamped=trialClock, keyList = ['left', 'right', 'escape', 'backspace'], maxWait = 2)
         
         if keys == None: # check for no response
             keys=[['NaN', 'NaN']]
@@ -169,7 +169,7 @@ for block in range(num_blocks):
             df.columns = ['subj', 'block', 'trial', 'SOA', 'resp', 'rt']
             df.to_csv(outputFileName)
             core.quit()
-        elif keys[0][0] == 'end': #data doesn't save (for debugging)
+        elif keys[0][0] == 'backspace': #data doesn't save (for debugging)
             win.close()
             core.quit()
             
