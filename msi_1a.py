@@ -1,5 +1,5 @@
 # msi pilot 1a
-# Nov 8 2018
+# Nov 29 2018
 # To determine individual temporal binding windows 
 # and choose SOAs for main run 
 
@@ -9,11 +9,11 @@ import os, sys
 from psychopy import visual, core, event, gui, logging, sound
 from random import shuffle
 import matplotlib.pyplot as plt
- 
-#Note to self: match degrees of visual angle to other studies. Set priority (core.rush(True)). Generate logfile using method from Lec6 slides. Remove esc key for final run?
+import csv
+
+#To do: Add practice block. Remove esc key for final run?
 
 #system setup
-#core.rush(True) #gives psychopy priority
 framerate = 100 #For debugging purposes only. Must be 100 for data collection 
 
 if framerate != 100:
@@ -34,6 +34,7 @@ trialClock = core.Clock()
 expClock = core.Clock()
 num_blocks = 5
 SOA_list= 4*[-40, -35, -30, -25, -20, -15, -10, -8, -5, -2, -1, 0, 1, 2, 5, 8, 10, 15, 20, 25, 30, 35, 40] # SOA (in number of frames)
+#SOA_list = [-20, -5, 0, 8]
 all_responses = []
 
 
@@ -42,6 +43,9 @@ outputFileName = 'data' + os.sep + '1a_sub' + subj + '.csv'
 if os.path.isfile(outputFileName) :
     sys.exit("Data for this subject already exists")
 
+#setup log file
+logFile = 'data' + os.sep + '1a_sub' + subj + '_log.csv'
+
 #check refresh rate
 actual_framerate = win.getActualFrameRate(nIdentical=100, nMaxFrames=1000,
     nWarmUpFrames=10, threshold=1)
@@ -49,25 +53,26 @@ if actual_framerate < framerate - 0.1 or actual_framerate >  framerate + 0.1:
     sys.exit("Expected refresh rate: " + str(framerate) + ". Actual rate: " + str(actual_framerate))
 
 #create beep stimulus
-beep = sound.Sound('3500', secs=0.007, stereo=False)
+beep = sound.Sound('3500', secs=0.01, stereo=False)
 beep.setVolume(1)
 
-#create flash stimulus
-flash = visual.RadialStim(win, size = 0.3, radialCycles = 1, radialPhase = 1/2, 
+#create flash stimulus (diameter 4cm = 3.8 degrees of visual angle at 60 cm)
+flash = visual.RadialStim(win, size = 0.15, radialCycles = 1, radialPhase = 1/2, 
                                 angularPhase = 1/4, angularCycles = 1/2)
 
 #create fixation
-fixation = visual.TextStim(win, text = "+", color = "white", height = 0.075)
+fixation = visual.TextStim(win, text = "+", color = "white", height = 0.06)
 
 #instructions
-instructions = visual.TextStim(win, text = """You will hear a beep and see a flash. When prompted, please use the 'A' and 'L' keys to report whether they occur simultaneously or not. Press any key to begin. 
-                                                        'A' = NO              'L' = YES""", height = 0.075, pos = (0, 0)) #response keys will be counterbalanced in final experiment
+instructions = visual.TextStim(win, text = """You will hear a beep and see a flash. When prompted, please use the left and right arrow keys to report whether they occur simultaneously or not. Press any key to begin. 
+                                                        ← = NO              → = YES""", height = 0.075, pos = (0, 0)) #response keys will be counterbalanced in final experiment
 start_prompt = visual.TextStim(win, text = "Press any key to begin", height = -0.075)
 instructions.draw()
 win.flip()
 event.waitKeys()
 
 block_count = 0
+
 #run
 for block in range(num_blocks):
     shuffle(SOA_list)
@@ -76,8 +81,9 @@ for block in range(num_blocks):
     if block_count != 1:
         
         #prompt any key
-        start_prompt = visual.TextStim(win, text = "Press any key to begin", height = 0.075)
-        start_prompt.draw()
+        break_prompt = visual.TextStim(win, text = """                Break           
+                                                            Press any key to continue""", height = 0.075)
+        break_prompt.draw()
         win.flip()
         event.waitKeys()
     
@@ -94,7 +100,8 @@ for block in range(num_blocks):
         core.wait(np.random.uniform(1, 1.5))
         fixation.draw()
         win.flip()
-         
+        core.rush(True) #give psychopy priority during presentation
+        
         if SOA < 0: #auditory then visual
             
             #beep
@@ -148,16 +155,17 @@ for block in range(num_blocks):
             " Error: " + str(trialClock.getTime() - (SOA*frame_length)))
             beep.play()
             
+        core.rush(False)
         core.wait(0.75)
         
         #collect response
         prompt = visual.TextStim(win, text = "Simultaneous?", height = 0.1, pos = (0, 0.25))
-        key_prompt = visual.TextStim(win, text = "NO                      YES", height = 0.1, pos = (0, -0.25))
+        key_prompt = visual.TextStim(win, text = "   NO                YES   ", height = 0.1, pos = (0, -0.25))
         prompt.draw()
         key_prompt.draw()
         win.flip()
         trialClock.reset()
-        keys = event.waitKeys(timeStamped=trialClock, keyList = ['a', 'l', 'escape', 'end'], maxWait = 2)
+        keys = event.waitKeys(timeStamped=trialClock, keyList = ['left', 'right', 'escape', 'ctrl', 'backspace'], maxWait = 2)
         
         if keys == None: # check for no response
             keys=[['NaN', 'NaN']]
@@ -167,11 +175,18 @@ for block in range(num_blocks):
             df.columns = ['subj', 'block', 'trial', 'SOA', 'resp', 'rt']
             df.to_csv(outputFileName)
             core.quit()
-        elif keys[0][0] == 'end': #data doesn't save (for debugging)
-            win.close()
-            core.quit()
-            
-        all_responses.append([subj, block + 1, trial_count, SOA, keys[0][0], keys[0][1]])
+        #elif keys[0][0] == 'backspace': #data doesn't save (for debugging)
+        #    win.close()
+        #    core.quit()
+        #    
+        trial_responses = [subj, block + 1, trial_count, SOA, keys[0][0], keys[0][1]]
+        all_responses.append(trial_responses)
+        
+        #write to log file
+        with open(logFile, 'a') as fd:
+            wr = csv.writer(fd, dialect='excel')
+            wr.writerow(trial_responses)
+        
         win.flip()
         core.wait(0.75) #ITI
 
