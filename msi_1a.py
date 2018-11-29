@@ -1,5 +1,5 @@
 # msi pilot 1a
-# Nov 8 2018
+# Nov 29 2018
 # To determine individual temporal binding windows 
 # and choose SOAs for main run 
 
@@ -10,7 +10,7 @@ from psychopy import visual, core, event, gui, logging, sound
 from random import shuffle
 import matplotlib.pyplot as plt
  
-#To do: match degrees of visual angle to other studies. Generate logfile? Remove esc key for final run?
+#To do: Generate logfile? Remove esc key for final run?
 
 #system setup
 framerate = 100 #For debugging purposes only. Must be 100 for data collection 
@@ -52,12 +52,12 @@ if actual_framerate < framerate - 0.1 or actual_framerate >  framerate + 0.1:
 beep = sound.Sound('3500', secs=0.01, stereo=False)
 beep.setVolume(1)
 
-#create flash stimulus
-flash = visual.RadialStim(win, size = 0.3, radialCycles = 1, radialPhase = 1/2, 
+#create flash stimulus (4cm = 3.8 degrees of visual angle at 60 cm)
+flash = visual.RadialStim(win, size = 0.15, radialCycles = 1, radialPhase = 1/2, 
                                 angularPhase = 1/4, angularCycles = 1/2)
 
 #create fixation
-fixation = visual.TextStim(win, text = "+", color = "white", height = 0.075)
+fixation = visual.TextStim(win, text = "+", color = "white", height = 0.06)
 
 #instructions
 instructions = visual.TextStim(win, text = """You will hear a beep and see a flash. When prompted, please use the left and right arrow keys to report whether they occur simultaneously or not. Press any key to begin. 
@@ -154,7 +154,7 @@ for block in range(num_blocks):
         
         #collect response
         prompt = visual.TextStim(win, text = "Simultaneous?", height = 0.1, pos = (0, 0.25))
-        key_prompt = visual.TextStim(win, text = "NO                      YES", height = 0.1, pos = (0, -0.25))
+        key_prompt = visual.TextStim(win, text = "   NO                YES   ", height = 0.1, pos = (0, -0.25))
         prompt.draw()
         key_prompt.draw()
         win.flip()
