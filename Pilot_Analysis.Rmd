@@ -10,24 +10,40 @@ library(tidyverse)
 library(ggplot2)
 library(data.table)
 
-df = read_csv("sub000.csv") %>% data.table()
+setwd("C:/Users/Phil/Projects/msi/msi_pilot/data")
+
+df = read_csv("1a_sub990.csv") %>% 
+  data.table() %>% 
+  filter(resp != "NaN")
+
+sub = df$subj[1]
 ```
 
 ```{r plot proportions}
 ggplot(df, aes(x=factor(SOA), fill = factor(resp))) + 
   geom_bar(position = "fill") + 
-  labs(x = "SOA", y = "Proportion", fill = "Judgment")
+  labs(x = "SOA", y = "Proportion", title = sub, fill = "Judgment") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r calculate frequencies}
+```{r plot synchrony freqs by SOA}
 df %>% 
   group_by(SOA, resp) %>% 
   summarise(n = n()) %>% 
   mutate(freq = n / sum(n)) %>% 
-  filter(resp == 'l') %>% 
+  filter(resp == 'right') %>% 
   
-  ggplot(aes(x = factor(SOA), y = freq)) + 
+  ggplot(aes(x = SOA, y = freq)) + 
     geom_point() +
     labs(x = "SOA", y = "Frequency")
+```
+
+```{r plot mean rt by SOA}
+df %>% group_by(SOA) %>% 
+  summarise(mean = mean(rt)) %>% 
+  
+  ggplot(aes(x = SOA, y = mean)) + 
+    geom_point() +
+    labs(x = "SOA (ms)", y = "Mean RT (s)")
 ```
 
