@@ -10,24 +10,92 @@ library(tidyverse)
 library(ggplot2)
 library(data.table)
 
-df = read_csv("sub000.csv") %>% data.table()
+setwd("C:/Users/Phil/Projects/msi/msi_pilot/data")
+
+df = read_csv("1a_sub001.csv") %>% 
+  data.table() %>% 
+  filter(resp != "NaN")
+
+#recode responses as sync and async
+df$resp_key <- df$resp
+
+df$resp[df$resp_key == "left"] <- 'asynchronous'
+df$resp[df$resp_key == "right"] <- 'synchronous'
+
+#change to factors
+df$resp <- factor(df$resp)
+df$SOA <- factor(df$SOA)
+
+sub = df$subj[1]
 ```
 
 ```{r plot proportions}
 ggplot(df, aes(x=factor(SOA), fill = factor(resp))) + 
   geom_bar(position = "fill") + 
-  labs(x = "SOA", y = "Proportion", fill = "Judgment")
+  labs(x = "SOA", y = "Proportion", title = sub, fill = "Judgment") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r calculate frequencies}
+```{r plot synchrony freqs by SOA}
 df %>% 
   group_by(SOA, resp) %>% 
   summarise(n = n()) %>% 
   mutate(freq = n / sum(n)) %>% 
-  filter(resp == 'l') %>% 
+  filter(resp == 'synchronous') %>% 
   
-  ggplot(aes(x = factor(SOA), y = freq)) + 
+  ggplot(aes(x = SOA, y = freq)) + 
     geom_point() +
-    labs(x = "SOA", y = "Frequency")
+    labs(x = "SOA", y = "Rate of Synchrony Perception")
+```
+
+```{r plot mean rt by SOA}
+df %>% group_by(SOA) %>% 
+  summarise(mean = mean(rt)) %>% 
+  
+  ggplot(aes(x = SOA, y = mean)) + 
+    geom_point() +
+    labs(x = "SOA (ms)", y = "Mean RT (s)")
+```
+
+```{r calculate rate of synchronous responses by SOA}
+
+count(df, df$SOA)
+
+tb <- table(df$SOA, df$resp)
+
+
+#create a data table with the rate of synchrony perception for each SOA
+sync_rate <- data.table(as.numeric(rownames(tb)), tb[24:46]/(tb[1:23]+tb[24:46]))
+setnames(sync_rate, c('V1', 'V2'), c('SOA','rate'))
+
+```
+
+```{r fit sigmoid}
+sigmoid = function(params, X) {
+  params[1] / (1 + exp(-params[2] * (X - params[3])))
+}
+
+x = unlist(sync_rate[1:12,1], use.names = FALSE)
+y = unlist(sync_rate[1:12,2], use.names = FALSE)
+
+# fitting code
+fitmodel <- nls(y~a/(1 + exp(-b * (x-c))), start=list(a=1,b=.5,c=-20))
+    
+# visualization code
+# get the coefficients using the coef function
+params=coef(fitmodel)
+
+#plot points
+plot(y~x,type="p")
+
+#plot smooth line
+x2 <- seq(-40, 0, by = 0.5)
+y2 <- sigmoid(params,x2)
+lines(y2~x2)
+
+#y2 <- sigmoid(params,x)
+#plot(y2,type="l")
+#points(y)
+#left_tbw <- data.frame(x, sigmoid(params,x))
 ```
 
