@@ -20,6 +20,7 @@ import random
 import matplotlib.pyplot as plt
 import csv
 
+
 #system setup
 framerate = 100 #For debugging purposes only. Must be 100 for data collection 
 
@@ -31,7 +32,6 @@ subgui = gui.Dlg()
 subgui.addField("Subject ID:")
 subgui.show()
 subj = subgui.data[0]
-
 
 #setup
 win = visual.Window(fullscr=True, allowGUI=False, color="black", screen=0, units='height', waitBlanking=True)
@@ -66,6 +66,7 @@ flash = visual.RadialStim(win, size = 0.15, radialCycles = 1, radialPhase = 1/2,
 
 #create fixation
 fixation = visual.TextStim(win, text = "+", color = "white", height = 0.06)
+
 
 #intstruction screen
 instructions = visual.TextStim(win, text = u"""You will hear a beep and see a flash. When prompted, please use the left and right arrow keys to report whether they occur simultaneously or not. Press any key to begin.
@@ -162,8 +163,8 @@ for block in range(num_blocks):
         core.wait(0.75)
         
         #collect response
-        prompt = visual.TextStim(win, text = "Simultaneous?", height = 0.1, pos = (0, 0.25))
-        key_prompt = visual.TextStim(win, text = "   NO                YES   ", height = 0.1, pos = (0, -0.25))
+        prompt = visual.TextStim(win, text = "Simultaneous?", height = 0.073, pos = (0, 0.15))
+        key_prompt = visual.TextStim(win, text = "   NO                              YES   ", height = 0.073, pos = (0, -0.3))
         prompt.draw()
         key_prompt.draw()
         win.flip()
@@ -194,7 +195,7 @@ for block in range(num_blocks):
         core.wait(0.75) #ITI
 
 #thank you screen
-thank_you = visual.TextStim(win, text = "Thanks for participating!", height = 0.1)
+thank_you = visual.TextStim(win, text = "Thanks for participating!", height = 0.06)
 thank_you.draw()
 win.flip()
 event.waitKeys()
